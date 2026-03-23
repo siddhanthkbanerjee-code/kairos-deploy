@@ -1,0 +1,276 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a12;
+  --foreground: #e9e7f0;
+  --accent: #a855f7;
+  --accent-2: #f472b6;
+  --panel: rgba(255, 255, 255, 0.04);
+  --panel-border: rgba(255, 255, 255, 0.06);
+  --blob1: #7c3aed;
+  --blob2: #4f46e5;
+  --blob3: #0d9488;
+  --blob4: #be185d;
+  --blobOpacity: 0.16;
+  --navText: rgba(255, 255, 255, 0.88);
+  --navIcon: rgba(255, 255, 255, 0.75);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a12;
+    --foreground: #e9e7f0;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, Segoe UI,
+    Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.editorial {
+  font-family: var(--font-editorial);
+}
+
+.kairos-blobs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.kairos-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: kairos-drift linear infinite;
+}
+
+.kairos-blob-1 {
+  width: 700px;
+  height: 700px;
+  background: rgba(140, 60, 255, 0.45);
+  top: -200px;
+  left: -150px;
+  animation-duration: 40s;
+}
+
+.kairos-blob-2 {
+  width: 600px;
+  height: 600px;
+  background: rgba(80, 50, 220, 0.40);
+  top: 30%;
+  right: -200px;
+  animation-duration: 55s;
+  animation-delay: -15s;
+}
+
+.kairos-blob-3 {
+  width: 500px;
+  height: 500px;
+  background: rgba(20, 160, 140, 0.38);
+  bottom: -100px;
+  left: 30%;
+  animation-duration: 48s;
+  animation-delay: -25s;
+}
+
+.kairos-blob-4 {
+  width: 400px;
+  height: 400px;
+  background: rgba(180, 30, 100, 0.35);
+  bottom: 20%;
+  left: -100px;
+  animation-duration: 62s;
+  animation-delay: -8s;
+}
+
+ .kairos-content {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  min-height: 100vh;
+}
+
+.kairos-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kairos-wordmark {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--navText);
+  letter-spacing: 0.02em;
+}
+
+.kairos-hamburger {
+  width: 44px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.kairos-hamburger span {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  background: var(--navIcon);
+  border-radius: 9999px;
+}
+
+.kairos-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms ease;
+}
+
+.kairos-drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.kairos-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100dvh;
+  width: min(420px, 92vw);
+  z-index: 45;
+  transform: translateX(110%);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  background: rgba(10, 10, 18, 0.62);
+  border-left: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(22px);
+  padding: 18px;
+}
+
+.kairos-drawer.open {
+  transform: translateX(0%);
+}
+
+.kairos-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 4px 16px;
+}
+
+.kairos-drawer-close {
+  width: 42px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.kairos-drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.kairos-drawer-links a,
+.kairos-drawer-links button {
+  text-align: left;
+  padding: 14px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.86);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.kairos-drawer-links a:hover,
+.kairos-drawer-links button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+@keyframes kairos-drift {
+  0%   { transform: translate(0px, 0px) scale(1); }
+  25%  { transform: translate(80px, -60px) scale(1.08); }
+  50%  { transform: translate(-40px, 100px) scale(0.95); }
+  75%  { transform: translate(-80px, -40px) scale(1.05); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.kairos-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--accent) 0%,
+    var(--accent) var(--pct),
+    rgba(255, 255, 255, 0.14) var(--pct),
+    rgba(255, 255, 255, 0.14) 100%
+  );
+  outline: none;
+}
+
+.kairos-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px rgba(168, 85, 247, 0.18), 0 0 26px rgba(168, 85, 247, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.kairos-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px rgba(168, 85, 247, 0.18), 0 0 26px rgba(168, 85, 247, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.kairos-range::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
