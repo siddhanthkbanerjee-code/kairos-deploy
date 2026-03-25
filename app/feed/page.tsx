@@ -257,6 +257,7 @@ function PremiumEventCard({
         <div className="relative">
           <div className="relative aspect-[9/10] w-full overflow-hidden bg-white/[0.04]">
             <EventImageWithFallback
+              key={`${ev.id}:${ev.image_url ?? "none"}`}
               event={ev}
               wrapperClassName="absolute inset-0"
               imgClassName="absolute inset-0 h-full w-full object-cover"
@@ -1120,6 +1121,7 @@ export default function FeedPage() {
           >
             <div className="relative h-full w-full">
               <EventImageWithFallback
+                key={`${featured.id}:${featured.image_url ?? "none"}`}
                 event={featured}
                 wrapperClassName="absolute inset-0"
                 imgClassName="absolute inset-0 h-full w-full object-cover"

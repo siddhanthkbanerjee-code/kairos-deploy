@@ -165,59 +165,72 @@ export default function EventImageWithFallback({
     sanitizeSrc(dna.imageUrl) ??
     sanitizeSrc(dna.image);
 
-  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [imgReady, setImgReady] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   const placeholderUi = useMemo(() => getPlaceholderUi(event), [event]);
 
-  const showImg = !!src && failedSrc !== src;
+  // Always render the fallback. If the image loads, we fade it on top of fallback.
+  // This guarantees a visible media area for demo safety.
+  const showImg = !!src && !imgFailed;
   const isSmall = size === "small";
 
   const emojiClass = isSmall ? "text-2xl" : "text-3xl";
   const labelClass = isSmall ? "mt-1 text-[10px]" : "mt-2 text-[11px]";
+
+  const imageState = showImg && imgReady ? "image" : "fallback";
 
   return (
     <div
       className={["relative", wrapperClassName].join(" ")}
       data-event-id={event.id ?? ""}
       data-image-src={src ?? ""}
-      data-image-failed-src={failedSrc ?? ""}
-      data-image-state={showImg ? "image" : "fallback"}
+      data-image-state={imageState}
     >
+      {/* Fallback is always visible. High z-index prevents overlays from hiding it. */}
+      <div
+        className="absolute inset-0 z-[50] flex items-center justify-center"
+        style={{
+          background: placeholderUi.gradient,
+          border: "1px solid rgba(255,255,255,0.18)",
+          boxShadow:
+            "0 10px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(168,85,247,0.10) inset",
+        }}
+      >
+        <div className="flex h-full w-full flex-col items-center justify-center text-center">
+          <div
+            className={emojiClass}
+            style={{ filter: "drop-shadow(0 12px 26px rgba(0,0,0,0.55))" }}
+          >
+            {placeholderUi.emoji}
+          </div>
+          <div
+            className={labelClass + " font-semibold text-white/90 drop-shadow"}
+          >
+            {placeholderUi.label}
+          </div>
+        </div>
+      </div>
+
+      {/* Real image (optional) fades in over fallback when ready. */}
       {showImg ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={src}
+          src={src ?? ""}
           alt={event.title ?? "Event image"}
           className={
             imgClassName ?? "absolute inset-0 h-full w-full object-cover"
           }
           loading="lazy"
           decoding="async"
-          onError={() => setFailedSrc(src)}
+          style={{
+            opacity: imgReady ? 1 : 0,
+            transition: "opacity 280ms ease",
+            zIndex: 60,
+          }}
+          onLoad={() => setImgReady(true)}
+          onError={() => setImgFailed(true)}
         />
-      ) : null}
-
-      {!showImg ? (
-        <div
-          className="absolute inset-0 z-10"
-          style={{ background: placeholderUi.gradient }}
-        >
-          <div className="relative h-full w-full flex flex-col items-center justify-center text-center">
-            <div
-              className={emojiClass}
-              style={{
-                filter: "drop-shadow(0 12px 26px rgba(0,0,0,0.55))",
-              }}
-            >
-              {placeholderUi.emoji}
-            </div>
-            <div
-              className={labelClass + " font-semibold text-white/90 drop-shadow"}
-            >
-              {placeholderUi.label}
-            </div>
-          </div>
-        </div>
       ) : null}
     </div>
   );

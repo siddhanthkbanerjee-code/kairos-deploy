@@ -305,6 +305,7 @@ export default function EventDetailPage() {
       <div className="relative">
         <section className="relative h-[50vh] min-h-[360px] w-full overflow-hidden">
           <EventImageWithFallback
+            key={`${ev.id}:${ev.image_url ?? "none"}`}
             event={ev}
             wrapperClassName="absolute inset-0"
             imgClassName="absolute inset-0 h-full w-full object-cover"
@@ -464,6 +465,7 @@ export default function EventDetailPage() {
                   style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}
                 >
                   <EventImageWithFallback
+                    key={`${ev.id}-vibe-${idx}:${src ?? "none"}`}
                     event={{
                       ...ev,
                       id: `${ev.id}-vibe-${idx}`,
@@ -496,6 +498,7 @@ export default function EventDetailPage() {
                 >
                   <div className="relative h-24 w-24 shrink-0 bg-white/[0.04] overflow-hidden">
                     <EventImageWithFallback
+                      key={`${s.id}:${s.image_url ?? "none"}`}
                       event={s}
                       wrapperClassName="absolute inset-0"
                       imgClassName="absolute inset-0 h-full w-full object-cover"

@@ -124,6 +124,7 @@ export default function SavedPage() {
               >
               <div className="relative aspect-[16/9] w-full overflow-hidden bg-white/[0.04]">
                 <EventImageWithFallback
+                  key={`${ev.id}:${ev.image_url ?? "none"}`}
                   event={ev}
                   wrapperClassName="absolute inset-0"
                   imgClassName="absolute inset-0 h-full w-full object-cover"
@@ -175,6 +176,7 @@ export default function SavedPage() {
                 >
                   <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-white/[0.04]">
                     <EventImageWithFallback
+                      key={`${ev.id}:${ev.image_url ?? "none"}`}
                       event={ev}
                       wrapperClassName="absolute inset-0"
                       imgClassName="absolute inset-0 h-full w-full object-cover"
