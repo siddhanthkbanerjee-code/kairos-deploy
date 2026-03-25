@@ -52,7 +52,7 @@ export default function Home() {
               Start the taste quiz
             </Link>
             <div className="text-sm" style={{ color: "#6b6b8a" }}>
-              12 questions, 90 seconds.
+              8 questions, 90 seconds.
             </div>
           </div>
         </section>
