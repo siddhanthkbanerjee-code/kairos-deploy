@@ -6,17 +6,12 @@ import { useRouter } from "next/navigation";
 type QuizAnswers = {
   timeOfDay?: string;
   fridayNight?: string;
+  aesthetic?: string;
+  soundtrack?: string;
   social?: string;
   genres?: string[];
   discoveryScore?: number; // 0..100
-  setting?: string[];
-  spendMindset?: string;
-  priceRange?: string[];
-  physical?: string;
-  experienceType?: string[];
-  openness?: string;
-  spontaneity?: string;
-  frequency?: string;
+  experienceIntent?: string;
 };
 
 type QuestionBase = {
@@ -46,22 +41,21 @@ type SliderQuestion = QuestionBase & {
   rightLabel: string;
 };
 
-type CompositeSpendQuestion = QuestionBase & {
-  kind: "spend";
-  options: string[]; // single-select mindset
-  sweetSpotLabel: string;
-  sweetSpotOptions: string[]; // multi-select chips
-};
-
-type AnyQuestion = SingleQuestion | MultiQuestion | SliderQuestion | CompositeSpendQuestion;
+type AnyQuestion = SingleQuestion | MultiQuestion | SliderQuestion;
 
 const ACCENT = "#a855f7";
 
 type PaletteName =
   | "night-underground"
+  | "night-underground-light"
   | "warm-intimate"
+  | "warm-intimate-light"
   | "outdoor-fresh"
+  | "outdoor-fresh-light"
   | "social-warm"
+  | "social-warm-light"
+  | "gold-dark"
+  | "blue-dark"
   | "default-dark";
 
 function dispatchPalette(name: PaletteName) {
@@ -73,22 +67,10 @@ function dispatchPalette(name: PaletteName) {
 
 const QUESTIONS: AnyQuestion[] = [
   {
-    id: "timeOfDay",
-    kind: "single",
-    label: "01 / ENERGY",
-    question: "When do you actually come alive?",
-    options: [
-      "🌅 Morning person before 10am",
-      "🧭 Afternoon explorer noon to 6pm",
-      "🌇 Evening creature 6pm to 10pm",
-      "🌙 Night owl the later the better",
-    ],
-  },
-  {
     id: "fridayNight",
     kind: "single",
-    label: "02 / VIBE",
-    question: "Pick your Friday night.",
+    label: "01 / VIBE",
+    question: "What's your Friday night energy?",
     options: [
       "Quiet table deep conversation",
       "Buzzy bar run into people",
@@ -97,15 +79,27 @@ const QUESTIONS: AnyQuestion[] = [
     ],
   },
   {
-    id: "social",
+    id: "aesthetic",
     kind: "single",
-    label: "03 / SOCIAL",
-    question: "You're going out tonight. Who's with you?",
+    label: "02 / AESTHETIC",
+    question: "Pick your aesthetic.",
     options: [
-      "Solo I like my own company",
-      "Partner or one close friend",
-      "Small gang 3 to 5 people",
-      "The more the merrier",
+      "Candlelit & cosy",
+      "Neon & electric",
+      "Elegant & refined",
+      "Gritty & underground",
+    ],
+  },
+  {
+    id: "soundtrack",
+    kind: "single",
+    label: "03 / SOUNDTRACK",
+    question: "What's your default soundtrack?",
+    options: [
+      "Chill / lo-fi / jazz",
+      "Pop / mainstream",
+      "Electronic / house / techno",
+      "Indie / alternative",
     ],
   },
   {
@@ -113,7 +107,6 @@ const QUESTIONS: AnyQuestion[] = [
     kind: "multi",
     label: "04 / TASTE",
     question: "What pulls you in? Pick all that apply.",
-    subtext: "Select as many as feel true.",
     options: [
       "Jazz and Soul",
       "Electronic and Club",
@@ -130,114 +123,51 @@ const QUESTIONS: AnyQuestion[] = [
     minSelected: 1,
   },
   {
-    id: "discoveryScore",
-    kind: "slider",
-    label: "05 / DISCOVERY",
-    question: "How adventurous are you feeling?",
-    subtext: "This controls how far we push you outside your comfort zone.",
-    min: 0,
-    max: 100,
-    leftLabel: "Comfort zone",
-    rightLabel: "Surprise me",
-  },
-  {
-    id: "setting",
-    kind: "multi",
-    label: "06 / SETTING",
-    question: "Pick your scene.",
-    options: [
-      "Dark intimate basement",
-      "Rooftop with city views",
-      "Grand theatre or hall",
-      "Open air parks and fields",
-      "Hidden secret location",
-      "Anywhere it's about the vibe",
-    ],
-    gridCols: 2,
-    minSelected: 1,
-  },
-  {
-    id: "spendMindset",
-    kind: "spend",
-    label: "07 / SPEND",
-    question: "How do you think about event spend?",
-    options: [
-      "I decide per event based on how excited I am",
-      "I have a rough weekly budget I stick to",
-      "Price rarely stops me if I really want to go",
-      "I mainly do free and low-cost",
-    ],
-    sweetSpotLabel: "Sweet spot per event",
-    sweetSpotOptions: [
-      "Free",
-      "Under £15",
-      "£15 to £35",
-      "£35 to £60",
-      "£60 and above",
-    ],
-  },
-  {
-    id: "physical",
+    id: "experienceIntent",
     kind: "single",
-    label: "08 / BODY",
-    question: "How physical do you like your plans?",
-    options: [
-      "Give me a seat and a drink",
-      "Happy on my feet for a few hours",
-      "I'll hike run cycle yes to active",
-      "Dance floor counts as exercise",
-    ],
-  },
-  {
-    id: "experienceType",
-    kind: "multi",
-    label: "09 / APPETITE",
-    question: "What kind of experience are you after?",
+    label: "05 / INTENT",
+    question: "What do you want tonight to do to you?",
     options: [
       "Make me think",
       "Make me feel something",
       "Make me move",
       "Make me laugh",
-      "All of the above I contain multitudes",
-    ],
-    gridCols: 2,
-    minSelected: 1,
-  },
-  {
-    id: "openness",
-    kind: "single",
-    label: "10 / CONNECTION",
-    question: "When it comes to meeting new people at events...",
-    options: [
-      "I go for connection love meeting strangers",
-      "I'm open to it if it happens naturally",
-      "I go for the event not the people",
-      "Depends entirely on the vibe",
+      "Surprise me",
     ],
   },
   {
-    id: "spontaneity",
+    id: "social",
     kind: "single",
-    label: "11 / SPONTANEITY",
-    question: "How far in advance do you actually plan?",
+    label: "06 / SOCIAL",
+    question: "Who's in your orbit tonight?",
     options: [
-      "I book weeks ahead I'm a planner",
-      "A few days out feels right",
-      "I decide day of always",
-      "I show up on a whim plans are overrated",
+      "Solo",
+      "Partner or one close friend",
+      "Small gang 3 to 5 people",
+      "The more the merrier",
     ],
   },
   {
-    id: "frequency",
+    id: "timeOfDay",
     kind: "single",
-    label: "12 / FREQUENCY",
-    question: "How often do you want to go out?",
+    label: "07 / TIME",
+    question: "When do you come alive?",
     options: [
-      "Once or twice a month is plenty",
-      "Most weekends",
-      "A few times a week",
-      "As much as possible I live for this",
+      "Morning before 10am",
+      "Afternoon noon to 6pm",
+      "Evening 6pm to 10pm",
+      "Night owl the later the better",
     ],
+  },
+  {
+    id: "discoveryScore",
+    kind: "slider",
+    label: "08 / DISCOVERY DIAL",
+    question: "How adventurous are you feeling?",
+    min: 0,
+    max: 100,
+    leftLabel: "Comfort zone",
+    rightLabel: "Surprise me",
   },
 ];
 
@@ -290,14 +220,11 @@ function getAnswerForQuestion(q: AnyQuestion, answers: QuizAnswers) {
 export default function QuizPage() {
   const router = useRouter();
 
-  const total = QUESTIONS.length; // 12
+  const total = QUESTIONS.length; // 8
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({
     discoveryScore: 50,
     genres: [],
-    setting: [],
-    priceRange: [],
-    experienceType: [],
   });
 
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -376,6 +303,32 @@ export default function QuizPage() {
         else if (v.includes("buzzy bar")) dispatchPalette("social-warm");
         else dispatchPalette("default-dark");
       }
+      if (key === "social") {
+        const v = String(value).toLowerCase();
+        if (v === "solo") dispatchPalette("night-underground-light");
+        else if (v.startsWith("partner")) dispatchPalette("warm-intimate-light");
+        else if (v.includes("more the merrier")) dispatchPalette("social-warm");
+      }
+      if (key === "aesthetic") {
+        const v = String(value).toLowerCase();
+        if (v.includes("neon")) dispatchPalette("night-underground");
+        else if (v.includes("candlelit")) dispatchPalette("warm-intimate");
+        else if (v.includes("elegant")) dispatchPalette("gold-dark");
+        else if (v.includes("gritty")) dispatchPalette("night-underground");
+      }
+      if (key === "soundtrack") {
+        const v = String(value).toLowerCase();
+        if (v.includes("electronic")) dispatchPalette("night-underground");
+        else if (v.includes("jazz")) dispatchPalette("warm-intimate");
+        else if (v.includes("indie")) dispatchPalette("blue-dark");
+        else dispatchPalette("default-dark");
+      }
+      if (key === "experienceIntent") {
+        const v = String(value).toLowerCase();
+        if (v.includes("think")) dispatchPalette("warm-intimate");
+        else if (v.includes("move")) dispatchPalette("social-warm");
+        else if (v.includes("feel")) dispatchPalette("night-underground-light");
+      }
       return next;
     });
   }
@@ -416,10 +369,6 @@ export default function QuizPage() {
       }
       case "slider":
         return true;
-      case "spend": {
-        const mindset = answers.spendMindset;
-        return typeof mindset === "string" && mindset.trim().length > 0;
-      }
       default:
         return false;
     }
@@ -443,7 +392,7 @@ export default function QuizPage() {
     if (!current) return;
     if (!canContinue()) return;
 
-    if (current.id === "frequency") {
+    if (current.id === "discoveryScore") {
       void submitAndGoFeed(answers);
       return;
     }
@@ -522,7 +471,7 @@ export default function QuizPage() {
                       onClick={() => {
                         if (isSubmitting) return;
                         updateAnswer(current.id, opt);
-                        if (current.id === "frequency") return;
+                        if (current.id === "discoveryScore") return;
                         window.setTimeout(() => {
                           advanceToNextCard();
                         }, 40);
@@ -572,7 +521,13 @@ export default function QuizPage() {
                   min={current.min}
                   max={current.max}
                   value={typeof answers.discoveryScore === "number" ? answers.discoveryScore : 50}
-                  onChange={(e) => updateAnswer("discoveryScore", Number(e.target.value))}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    updateAnswer("discoveryScore", val);
+                    if (val > 70) dispatchPalette("night-underground");
+                    else if (val >= 40) dispatchPalette("default-dark");
+                    else dispatchPalette("warm-intimate");
+                  }}
                   className="kairos-range"
                   style={{
                     ["--pct" as never]: `${
@@ -589,53 +544,6 @@ export default function QuizPage() {
               </div>
             ) : null}
 
-            {current.kind === "spend" ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-3">
-                  {current.options.map((opt) => {
-                    const selected = answers.spendMindset === opt;
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => {
-                          if (isSubmitting) return;
-                          updateAnswer("spendMindset", opt);
-                          window.setTimeout(() => {
-                            advanceToNextCard();
-                          }, 40);
-                        }}
-                        disabled={isSubmitting}
-                        className={optionClassName(selected)}
-                      >
-                        <div className="text-base font-medium text-white">{opt}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="text-sm font-semibold text-white/70">{current.sweetSpotLabel}</div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {current.sweetSpotOptions.map((opt) => {
-                      const arr = answers.priceRange ?? [];
-                      const selected = Array.isArray(arr) && arr.includes(opt);
-                      return (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => toggleMulti("priceRange", opt)}
-                          disabled={isSubmitting}
-                          className={chipClassName(selected)}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            ) : null}
           </div>
 
           <div className="mt-8">
@@ -655,7 +563,7 @@ export default function QuizPage() {
             >
               {isSubmitting
                 ? "Finding your matches…"
-                : current.id === "frequency"
+                : current.id === "discoveryScore"
                   ? "See my results"
                   : "Continue"}
             </button>

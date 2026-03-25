@@ -37,6 +37,10 @@ function quizAnswersToTasteDescription(quizAnswers: QuizAnswers): string {
   const timeOfDay = typeof qa.timeOfDay === "string" ? qa.timeOfDay.trim() : "";
   const fridayNight =
     typeof qa.fridayNight === "string" ? qa.fridayNight.trim() : "";
+  const aesthetic =
+    typeof qa.aesthetic === "string" ? qa.aesthetic.trim() : "";
+  const soundtrack =
+    typeof qa.soundtrack === "string" ? qa.soundtrack.trim() : "";
   const social = typeof qa.social === "string" ? qa.social.trim() : "";
 
   const genres = Array.isArray(qa.genres)
@@ -48,28 +52,12 @@ function quizAnswersToTasteDescription(quizAnswers: QuizAnswers): string {
       ? Math.max(0, Math.min(100, Math.round(qa.discoveryScore)))
       : null;
 
-  const setting = Array.isArray(qa.setting)
-    ? (qa.setting.filter((x) => typeof x === "string" && x.trim().length > 0) as string[])
-    : [];
-
-  const spendMindset =
-    typeof qa.spendMindset === "string" ? qa.spendMindset.trim() : "";
-
-  const priceRange = Array.isArray(qa.priceRange)
-    ? (qa.priceRange.filter((x) => typeof x === "string" && x.trim().length > 0) as string[])
-    : [];
-
-  const physical = typeof qa.physical === "string" ? qa.physical.trim() : "";
-
   const experienceType = Array.isArray(qa.experienceType)
     ? (qa.experienceType.filter((x) => typeof x === "string" && x.trim().length > 0) as string[])
     : [];
 
-  const openness = typeof qa.openness === "string" ? qa.openness.trim() : "";
-  const spontaneity =
-    typeof qa.spontaneity === "string" ? qa.spontaneity.trim() : "";
-  const frequency =
-    typeof qa.frequency === "string" ? qa.frequency.trim() : "";
+  const experienceIntent =
+    typeof qa.experienceIntent === "string" ? qa.experienceIntent.trim() : "";
 
   const parts: string[] = [];
 
@@ -79,18 +67,14 @@ function quizAnswersToTasteDescription(quizAnswers: QuizAnswers): string {
       `${timeOfDay ? "with" : "User wants"} ${fridayNight} energy`
     );
   }
+  if (aesthetic) parts.push(`Aesthetic preference: ${aesthetic}`);
+  if (soundtrack) parts.push(`Default soundtrack: ${soundtrack}`);
   if (social) parts.push(`Going ${social}`);
   if (genres.length) parts.push(`Interested in ${genres.join(", ")}`);
   if (discoveryScore !== null)
     parts.push(`Discovery appetite ${discoveryScore}/100`);
-  if (setting.length) parts.push(`Prefers settings like ${setting.join(", ")}`);
-  if (spendMindset) parts.push(`Spends like this: ${spendMindset}`);
-  if (priceRange.length) parts.push(`Sweet spot per event: ${priceRange.join(", ")}`);
-  if (physical) parts.push(`Physical appetite: ${physical}`);
+  if (experienceIntent) parts.push(`Tonight they want to: ${experienceIntent}`);
   if (experienceType.length) parts.push(`Looking to ${experienceType.join(", ")}`);
-  if (openness) parts.push(`Openness to strangers: ${openness}`);
-  if (spontaneity) parts.push(`Plans ${spontaneity}`);
-  if (frequency) parts.push(`Goes out ${frequency}`);
 
   if (parts.length === 0) {
     return "User is looking for interesting events in London tonight, open to a variety of vibes and experiences.";

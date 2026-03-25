@@ -197,6 +197,7 @@ export default function EventDetailPage() {
   const router = useRouter();
   const [ev, setEv] = useState<RecommendResult | null>(null);
   const [animateBars, setAnimateBars] = useState(false);
+  const [savedIds, setSavedIds] = useState<string[]>([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -227,6 +228,18 @@ export default function EventDetailPage() {
     return () => window.clearTimeout(t);
   }, []);
 
+  useEffect(() => {
+    try {
+      const savedRaw = sessionStorage.getItem("kairos:saved");
+      const parsed = savedRaw ? JSON.parse(savedRaw) : [];
+      setSavedIds(
+        Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : []
+      );
+    } catch {
+      setSavedIds([]);
+    }
+  }, []);
+
   const userGenres = useMemo(() => {
     try {
       const raw = sessionStorage.getItem("kairos:quiz");
@@ -255,6 +268,19 @@ export default function EventDetailPage() {
     }
   }, [ev]);
 
+  function toggleSave(id: string) {
+    setSavedIds((prev) => {
+      const exists = prev.includes(id);
+      const next = exists ? prev.filter((x) => x !== id) : [...prev, id];
+      try {
+        sessionStorage.setItem("kairos:saved", JSON.stringify(next));
+      } catch {
+        // If storage is unavailable, just keep the UI in sync.
+      }
+      return next;
+    });
+  }
+
   if (!ev) {
     return (
       <main className="min-h-dvh" style={{ color: "#fff" }}>
@@ -266,6 +292,7 @@ export default function EventDetailPage() {
   }
 
   const matchPct = clampMatchPercent(ev.score ?? 0);
+  const isSaved = savedIds.includes(ev.id);
   const dateLabel = formatEventDate(ev.date);
   const timeLabel = getStartTime(ev);
   const priceLabel = formatPriceDisplay(ev.price_display);
@@ -282,13 +309,15 @@ export default function EventDetailPage() {
               src={ev.image_url}
               alt={ev.title ?? "Event image"}
               className="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
+              decoding="async"
             />
           ) : null}
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to bottom, rgba(10,10,18,0.25), rgba(10,10,18,0.65), rgba(10,10,18,0.95))",
+                "linear-gradient(to bottom, rgba(10,10,18,0.25), rgba(10,10,18,0.55), rgba(10,10,18,0.85))",
             }}
           />
 
@@ -307,7 +336,7 @@ export default function EventDetailPage() {
             </button>
           </div>
 
-          <div className="absolute right-5 top-5 sm:right-8 sm:top-7">
+          <div className="absolute right-5 top-5 flex flex-col items-end gap-2 sm:right-8 sm:top-7">
             <div
               className="rounded-full px-4 py-2 text-sm font-semibold"
               style={{
@@ -319,6 +348,23 @@ export default function EventDetailPage() {
             >
               {matchPct}% match
             </div>
+            <button
+              type="button"
+              onClick={() => toggleSave(ev.id)}
+              aria-pressed={isSaved}
+              className="rounded-full px-4 py-2 text-sm font-semibold"
+              style={{
+                background: isSaved
+                  ? `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_2} 100%)`
+                  : "rgba(10,10,18,0.40)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#fff",
+                backdropFilter: "blur(10px)",
+                boxShadow: isSaved ? "0 18px 60px rgba(168,85,247,0.18)" : "none",
+              }}
+            >
+              {isSaved ? "Saved" : "Save"}
+            </button>
           </div>
 
           <div className="absolute bottom-6 left-5 right-5 sm:bottom-8 sm:left-8 sm:right-8">
@@ -448,7 +494,7 @@ export default function EventDetailPage() {
                   className="flex items-center gap-4 overflow-hidden rounded-2xl text-left"
                   style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.03)" }}
                 >
-                  <div className="h-24 w-24 shrink-0 bg-white/[0.04]">
+                  <div className="relative h-24 w-24 shrink-0 bg-white/[0.04] overflow-hidden">
                     {s.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -456,8 +502,24 @@ export default function EventDetailPage() {
                         alt={s.title ?? "Event image"}
                         className="h-full w-full object-cover"
                         loading="lazy"
+                        decoding="async"
                       />
-                    ) : null}
+                    ) : (
+                      <>
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, rgba(168,85,247,0.22) 0%, rgba(244,114,182,0.16) 45%, rgba(20,160,140,0.10) 100%)",
+                          }}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-sm font-semibold text-white/85 drop-shadow">
+                            {(s.title ?? "U").slice(0, 1).toUpperCase()}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div className="flex-1 py-3 pr-4">
                     <div className="line-clamp-1 text-sm font-semibold text-white">
@@ -492,13 +554,9 @@ export default function EventDetailPage() {
                   <Link href="/passport" className="hover:text-white/85">
                     Taste Passport
                   </Link>
-                  <a
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
-                    className="hover:text-white/85"
-                  >
+                  <Link href="/saved" className="hover:text-white/85">
                     Saved
-                  </a>
+                  </Link>
                   <Link href="/coming-soon" className="hover:text-white/85">
                     For Venues
                   </Link>

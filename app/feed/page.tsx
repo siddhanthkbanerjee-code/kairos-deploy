@@ -118,6 +118,11 @@ function getAiExplanation(ev: RecommendResult) {
   return typeof exp === "string" ? exp : null;
 }
 
+function safeExplanation(exp: string | null) {
+  const s = exp?.trim() ?? "";
+  return s.length ? s : null;
+}
+
 function parsePriceValue(price: string | null): number | null {
   if (!price) return null;
   const p = price.trim().toLowerCase();
@@ -151,19 +156,27 @@ function getCategoryBucket(ev: RecommendResult): string[] {
   if (isMusic) buckets.push("Music");
 
   const isArts =
-    genre.includes("other") ||
-    ["intimate", "experimental", "immersive"].some((k) => tags.includes(k));
+    ["intimate", "experimental", "immersive", "atmospheric"].some((k) => tags.includes(k));
   if (isArts) buckets.push("Arts and Culture");
 
   const isOutdoor =
-    (tags.includes("outdoor") || tags.includes("energetic")) &&
-    (venue.includes("park") || venue.includes("outdoor"));
+    tags.includes("outdoor") ||
+    tags.includes("energetic") ||
+    tags.includes("active") ||
+    venue.includes("park") ||
+    venue.includes("outdoor") ||
+    venue.includes("trail");
   if (isOutdoor) buckets.push("Outdoor and Active");
 
-  if (social.includes("group")) buckets.push("Social");
+  if (social.includes("group") || social.includes("solo")) buckets.push("Social");
 
   const isFood =
-    ["bar", "cafe", "restaurant", "kitchen"].some((k) => venue.includes(k));
+    ["bar", "cafe", "restaurant", "kitchen", "dining", "bistro"].some((k) =>
+      venue.includes(k)
+    ) ||
+    tags.includes("food") ||
+    tags.includes("drink") ||
+    tags.includes("cocktail");
   if (isFood) buckets.push("Food and Drink");
 
   return buckets.length ? buckets : ["All"];
@@ -184,19 +197,30 @@ function getSocialContext(ev: RecommendResult) {
 function PremiumEventCard({
   ev,
   onOpen,
+  isSaved,
+  onToggleSave,
+  variant,
 }: {
   ev: RecommendResult;
   onOpen: (ev: RecommendResult) => void;
+  isSaved: boolean;
+  onToggleSave: (id: string) => void;
+  variant: "carousel" | "grid";
 }) {
   const matchPct = clampMatchPercent(ev.score ?? 0);
   const dateLabel = formatEventDate(ev.date);
   const venueLine = [ev.venue, dateLabel].filter(Boolean).join(" • ");
+  const explanation = safeExplanation(getAiExplanation(ev));
 
   return (
     <button
       type="button"
       onClick={() => onOpen(ev)}
-      className="group w-[180px] shrink-0 text-left"
+      className={
+        variant === "carousel"
+          ? "group w-[180px] shrink-0 text-left"
+          : "group w-full text-left"
+      }
     >
       <article
         className="overflow-hidden rounded-2xl"
@@ -205,31 +229,81 @@ function PremiumEventCard({
             "0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.07)",
           background:
             "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.02) 100%)",
+          transition: "transform 220ms ease, box-shadow 220ms ease",
           transform: "translateY(0px)",
         }}
       >
         <div className="relative">
-          <div className="h-[200px] w-full bg-white/[0.04]">
+          <div className="relative aspect-[9/10] w-full overflow-hidden bg-white/[0.04]">
             {ev.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={ev.image_url}
                 alt={ev.title ?? "Event image"}
-                className="h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
                 loading="lazy"
+                decoding="async"
               />
             ) : null}
+
+            {!ev.image_url ? (
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(168,85,247,0.28) 0%, rgba(244,114,182,0.18) 45%, rgba(20,160,140,0.12) 100%)",
+                }}
+              />
+            ) : null}
+
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to top, rgba(10,10,18,0.88), rgba(10,10,18,0.10))",
+                  "linear-gradient(to top, rgba(10,10,18,0.78), rgba(10,10,18,0.06))",
               }}
             />
+
+            {!ev.image_url ? (
+              <div className="absolute bottom-3 left-3 right-3 z-10">
+                <div className="line-clamp-2 text-[11px] font-semibold text-white/90 drop-shadow">
+                  {ev.title ?? "Untitled event"}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div
-            className="absolute right-3 top-3 rounded-full px-3 py-2 text-center"
+            role="button"
+            tabIndex={0}
+            aria-pressed={isSaved}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleSave(ev.id);
+            }}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleSave(ev.id);
+            }}
+            className="absolute left-3 top-3 z-10 cursor-pointer rounded-full px-3 py-2 text-center min-h-[38px] min-w-[38px] flex items-center justify-center"
+            style={{
+              background: isSaved
+                ? `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_2} 100%)`
+                : "rgba(10,10,18,0.45)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <div className="text-[10px] font-semibold" style={{ color: "#fff" }}>
+              {isSaved ? "Saved" : "Save"}
+            </div>
+          </div>
+
+          <div
+            className="absolute right-3 top-3 z-10 rounded-full px-3 py-2 text-center"
             style={{
               background: "rgba(10,10,18,0.45)",
               border: "1px solid rgba(255,255,255,0.12)",
@@ -248,6 +322,16 @@ function PremiumEventCard({
             {ev.title ?? "Untitled event"}
           </div>
           <div className="line-clamp-1 text-xs text-white/55">{venueLine || "—"}</div>
+
+          <div
+            className={[
+              "min-h-[44px] line-clamp-2 text-[11px] leading-snug text-white/55",
+              explanation ? "" : "opacity-0",
+            ].join(" ")}
+            aria-hidden={!explanation}
+          >
+            {explanation ?? ""}
+          </div>
 
           <div className="flex items-center justify-between pt-1">
             <div className="text-xs text-white/75">
@@ -270,44 +354,155 @@ function PremiumEventCard({
   );
 }
 
+function getRowIdentity(title: string) {
+  const t = title.toLowerCase();
+  if (t === "for you") return "Personalised";
+  if (t.startsWith("best for")) return "Mode Picks";
+  if (t.includes("happening this week")) return "Calendar";
+  if (t === "late night") return "After Hours";
+  if (t.includes("electronic")) return "Momentum";
+  if (t.includes("intimate")) return "Close-up";
+  if (t.includes("social")) return "Shared Energy";
+  if (t.includes("outdoor")) return "Open Air";
+  if (t.includes("food")) return "Taste + Drink";
+  if (t.includes("under £20")) return "Low Cost";
+  if (t.includes("just dropped")) return "New Arrivals";
+  return "Curated";
+}
+
 function Row({
   title,
+  subtitle,
   events,
   expanded,
   onToggleExpanded,
   onOpen,
+  savedIds,
+  onToggleSave,
 }: {
   title: string;
+  subtitle?: string;
   events: RecommendResult[];
   expanded: boolean;
   onToggleExpanded: () => void;
   onOpen: (ev: RecommendResult) => void;
+  savedIds: string[];
+  onToggleSave: (id: string) => void;
 }) {
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const pausedRef = useRef(false);
+  const userInteractedUntilRef = useRef(0);
+
+  useEffect(() => {
+    if (expanded) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const canHoverAndFinePointer = window.matchMedia(
+      "(hover: hover) and (pointer: fine)"
+    ).matches;
+    if (prefersReduced || !canHoverAndFinePointer) return;
+
+    let rafId = 0;
+    let lastTs = performance.now();
+
+    const onUserScroll = () => {
+      userInteractedUntilRef.current = performance.now() + 1500;
+    };
+    el.addEventListener("scroll", onUserScroll, { passive: true });
+
+    const tick = (ts: number) => {
+      const dt = ts - lastTs;
+      lastTs = ts;
+
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      const shouldAutoScroll =
+        !pausedRef.current && maxScroll > 0 && ts >= userInteractedUntilRef.current;
+
+      if (shouldAutoScroll) {
+        const speedPxPerSec = 14; // subtle + premium
+        el.scrollLeft = el.scrollLeft + (speedPxPerSec * dt) / 1000;
+        if (el.scrollLeft >= maxScroll - 1) el.scrollLeft = 0;
+      }
+
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      el.removeEventListener("scroll", onUserScroll);
+    };
+  }, [expanded]);
+
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="editorial text-lg font-semibold text-white">{title}</h2>
-        <button
-          type="button"
-          onClick={onToggleExpanded}
-          className="text-sm font-medium text-white/55 underline decoration-white/20 underline-offset-4 hover:text-white/75"
-        >
-          {expanded ? "Show less" : "See all"}
-        </button>
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <div className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/45">
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{
+                background: `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_2} 100%)`,
+              }}
+            />
+            {getRowIdentity(title)}
+          </div>
+          <h2 className="editorial text-2xl font-semibold text-white sm:text-[28px]">
+            {title}
+          </h2>
+          {subtitle ? (
+            <p className="mt-1 text-sm text-white/55">{subtitle}</p>
+          ) : null}
+        </div>
+        {events.length > 4 ? (
+          <button
+            type="button"
+            onClick={onToggleExpanded}
+            className="text-sm font-medium text-white/55 underline decoration-white/20 underline-offset-4 hover:text-white/75"
+          >
+            {expanded ? "Show less" : "See all"}
+          </button>
+        ) : null}
       </div>
 
       {expanded ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 justify-items-start">
           {events.map((ev) => (
             <div key={ev.id} className="w-full">
-              <PremiumEventCard ev={ev} onOpen={onOpen} />
+              <PremiumEventCard
+                ev={ev}
+                onOpen={onOpen}
+                isSaved={savedIds.includes(ev.id)}
+                onToggleSave={onToggleSave}
+                variant="grid"
+              />
             </div>
           ))}
         </div>
       ) : (
-        <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
+        <div
+          ref={scrollerRef}
+          onMouseEnter={() => {
+            pausedRef.current = true;
+          }}
+          onMouseLeave={() => {
+            pausedRef.current = false;
+          }}
+          className="no-scrollbar flex gap-4 overflow-x-auto pb-2"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           {events.map((ev) => (
-            <PremiumEventCard key={ev.id} ev={ev} onOpen={onOpen} />
+            <PremiumEventCard
+              key={ev.id}
+              ev={ev}
+              onOpen={onOpen}
+              isSaved={savedIds.includes(ev.id)}
+              onToggleSave={onToggleSave}
+              variant="carousel"
+            />
           ))}
         </div>
       )}
@@ -338,9 +533,34 @@ export default function FeedPage() {
   >("Any");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [savedIds, setSavedIds] = useState<string[]>([]);
+
+  const activeFilterCount =
+    (whenFilter !== "All" ? 1 : 0) +
+    (categoryFilter !== "All" ? 1 : 0) +
+    (priceFilter !== "Any" ? 1 : 0);
+
+  function resetFilters() {
+    setWhenFilter("All");
+    setCategoryFilter("All");
+    setPriceFilter("Any");
+    setOpenDropdown(null);
+  }
 
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const savedRaw = sessionStorage.getItem("kairos:saved");
+      const parsed = savedRaw ? JSON.parse(savedRaw) : [];
+      setSavedIds(
+        Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : []
+      );
+    } catch {
+      setSavedIds([]);
+    }
   }, []);
 
   useEffect(() => {
@@ -366,14 +586,15 @@ export default function FeedPage() {
   }, [router]);
 
   useEffect(() => {
-    function onDocMouseDown(e: MouseEvent) {
+    function onDocPointerDown(e: PointerEvent) {
       if (!openDropdown) return;
       const t = e.target as Node | null;
       if (t && dropdownRef.current && dropdownRef.current.contains(t)) return;
       setOpenDropdown(null);
     }
-    document.addEventListener("mousedown", onDocMouseDown);
-    return () => document.removeEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("pointerdown", onDocPointerDown);
+    return () =>
+      document.removeEventListener("pointerdown", onDocPointerDown);
   }, [openDropdown]);
 
   function dateKey(d: Date) {
@@ -381,6 +602,19 @@ export default function FeedPage() {
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const dd = String(d.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function startOfDay(d: Date) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function getWeekendRange(now: Date) {
+    const day = now.getDay(); // 0 sun, 6 sat
+    const diffToSaturday = day <= 6 ? (6 - day + 7) % 7 : 0;
+    const sat = startOfDay(new Date(now.getTime() + diffToSaturday * 86400000));
+    const sun = startOfDay(new Date(sat.getTime() + 86400000));
+    const endSun = new Date(sun.getTime() + 86399999);
+    return { start: sat, end: endSun };
   }
 
   const events = useMemo(() => items ?? null, [items]);
@@ -397,15 +631,18 @@ export default function FeedPage() {
     if (whenFilter !== "All") {
       const eventKey = (ev.date ?? "").slice(0, 10);
       if (!eventKey) return false;
-      const diffDays =
-        Math.floor(
-          (new Date(eventKey).getTime() - new Date(todayKey).getTime()) /
-            (1000 * 60 * 60 * 24)
-        ) || 0;
+      const eventDate = startOfDay(new Date(eventKey));
+      const today = startOfDay(new Date(todayKey));
+      const diffDays = Math.floor((eventDate.getTime() - today.getTime()) / 86400000) || 0;
 
       if (whenFilter === "Tonight" && eventKey !== todayKey) return false;
-      if (whenFilter === "This Weekend" && !(diffDays >= 0 && diffDays <= 3))
-        return false;
+      if (whenFilter === "This Weekend") {
+        const now = new Date();
+        const { start, end } = getWeekendRange(now);
+        if (!(eventDate.getTime() >= start.getTime() && eventDate.getTime() <= end.getTime())) {
+          return false;
+        }
+      }
       if (whenFilter === "This Week" && !(diffDays >= 0 && diffDays <= 7))
         return false;
     }
@@ -428,37 +665,8 @@ export default function FeedPage() {
 
     // Category
     if (categoryFilter !== "All") {
-      const genreRaw = getEventGenres(ev).join(" ");
-      const genre = genreRaw.toLowerCase();
-      const tags = safeTags(ev.vibe_tags).join(" ").toLowerCase();
-      const venue = (ev.venue ?? "").toLowerCase();
-      const social = getSocialContext(ev);
-
-      const isMusic = [
-        "rock",
-        "pop",
-        "jazz",
-        "electronic",
-        "dance",
-        "r&b",
-        "classical",
-        "latin",
-        "alternative",
-        "other",
-      ].some((k) => genre.includes(k));
-
-      const isArts = ["immersive", "experimental", "intimate", "atmospheric"].some(
-        (k) => tags.includes(k)
-      );
-      const isOutdoor = tags.includes("outdoor") || tags.includes("energetic") || venue.includes("park");
-      const isSocial = social.includes("group") || social.includes("solo");
-      const isFood = ["bar", "cafe", "restaurant"].some((k) => venue.includes(k));
-
-      if (categoryFilter === "Music" && !isMusic) return false;
-      if (categoryFilter === "Arts and Culture" && !isArts) return false;
-      if (categoryFilter === "Outdoor and Active" && !isOutdoor) return false;
-      if (categoryFilter === "Social" && !isSocial) return false;
-      if (categoryFilter === "Food and Drink" && !isFood) return false;
+      const buckets = getCategoryBucket(ev);
+      if (!buckets.includes(categoryFilter)) return false;
     }
 
     return true;
@@ -474,20 +682,25 @@ export default function FeedPage() {
     return filtered[0];
   }, [filtered]);
 
+  const modeNeedle = useMemo(
+    () =>
+      activeMode === "solo" ? "solo" : activeMode === "date" ? "date night" : "group",
+    [activeMode]
+  );
+
+  const modeMatched = useMemo(() => {
+    if (!filtered) return [];
+    return filtered.filter((ev) => getSocialContext(ev).includes(modeNeedle));
+  }, [filtered, modeNeedle]);
+
   const forYou = useMemo(() => {
     if (!filtered) return [];
-    const base = filtered.slice(0, 20);
-    const modeNeedle =
-      activeMode === "solo"
-        ? "solo"
-        : activeMode === "date"
-          ? "date night"
-          : "group";
+    const base = filtered.slice(0, 28);
 
     const boosted = [...base].sort((a, b) => {
-      const as = getSocialContext(a).includes(modeNeedle) ? 1 : 0;
-      const bs = getSocialContext(b).includes(modeNeedle) ? 1 : 0;
-      if (bs !== as) return bs - as;
+      const aMatch = getSocialContext(a).includes(modeNeedle);
+      const bMatch = getSocialContext(b).includes(modeNeedle);
+      if (aMatch !== bMatch) return aMatch ? -1 : 1;
       return (b.score ?? 0) - (a.score ?? 0);
     });
     return boosted.slice(0, 8);
@@ -495,7 +708,7 @@ export default function FeedPage() {
 
   const happeningThisWeek = useMemo(() => {
     if (!filtered) return [];
-    const rest = filtered.slice(8);
+    const rest = filtered.slice(6);
     return [...rest]
       .sort((a, b) => {
         const da = a.date ? new Date(a.date).getTime() : Number.POSITIVE_INFINITY;
@@ -522,6 +735,68 @@ export default function FeedPage() {
     return filtered.filter(isLateNight).slice(0, 16);
   }, [filtered]);
 
+  const socialPicks = useMemo(() => {
+    if (!filtered) return [];
+    return filtered
+      .filter((ev) => getSocialContext(ev).includes("group") || getSocialContext(ev).includes("social"))
+      .slice(0, 12);
+  }, [filtered]);
+
+  const outdoorActive = useMemo(() => {
+    if (!filtered) return [];
+    return filtered
+      .filter((ev) => {
+        const tags = safeTags(ev.vibe_tags).join(" ").toLowerCase();
+        const venue = (ev.venue ?? "").toLowerCase();
+        return (
+          tags.includes("outdoor") ||
+          tags.includes("active") ||
+          tags.includes("energetic") ||
+          venue.includes("park")
+        );
+      })
+      .slice(0, 12);
+  }, [filtered]);
+
+  const foodAndDrink = useMemo(() => {
+    if (!filtered) return [];
+    return filtered
+      .filter((ev) => {
+        const tags = safeTags(ev.vibe_tags).join(" ").toLowerCase();
+        const venue = (ev.venue ?? "").toLowerCase();
+        return (
+          ["bar", "cafe", "restaurant", "kitchen", "dining", "bistro"].some((k) =>
+            venue.includes(k)
+          ) ||
+          tags.includes("food") ||
+          tags.includes("drink") ||
+          tags.includes("cocktail")
+        );
+      })
+      .slice(0, 12);
+  }, [filtered]);
+
+  const underTwenty = useMemo(() => {
+    if (!filtered) return [];
+    return filtered
+      .filter((ev) => {
+        const p = parsePriceValue(ev.price_display);
+        return p !== null && p > 0 && p < 20;
+      })
+      .slice(0, 12);
+  }, [filtered]);
+
+  const justDropped = useMemo(() => {
+    if (!filtered) return [];
+    return [...filtered]
+      .sort((a, b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db = b.date ? new Date(b.date).getTime() : 0;
+        return db - da;
+      })
+      .slice(0, 10);
+  }, [filtered]);
+
   if (sortedEvents === null) {
     return (
       <main className="min-h-dvh">
@@ -537,6 +812,19 @@ export default function FeedPage() {
     router.push(`/event/${encodeURIComponent(ev.id)}`);
   }
 
+  function toggleSave(id: string) {
+    setSavedIds((prev) => {
+      const exists = prev.includes(id);
+      const next = exists ? prev.filter((x) => x !== id) : [...prev, id];
+      try {
+        sessionStorage.setItem("kairos:saved", JSON.stringify(next));
+      } catch {
+        // Keep UI consistent even if storage fails.
+      }
+      return next;
+    });
+  }
+
   return (
     <main className="min-h-dvh" style={{ color: "#fff" }}>
       <div className="mx-auto w-full max-w-6xl px-5 pb-14 pt-10 sm:px-8">
@@ -546,6 +834,9 @@ export default function FeedPage() {
           </h1>
           <p className="mt-3 max-w-2xl text-base text-white/60">
             A personalised selection based on your vibe.
+          </p>
+          <p className="mt-2 text-sm text-white/55">
+            Curated based on your vibe, energy, and taste profile.
           </p>
         </header>
 
@@ -580,7 +871,7 @@ export default function FeedPage() {
           })}
         </div>
 
-        <div className="sticky top-0 z-20 -mx-5 mb-5 bg-black/30 px-5 py-3 backdrop-blur-md sm:-mx-8 sm:px-8">
+        <div className="sticky top-0 z-20 -mx-3 mb-5 bg-black/30 px-5 py-3 backdrop-blur-md sm:-mx-8 sm:px-8">
           <div ref={dropdownRef} className="flex flex-wrap items-center gap-2">
             <div className="flex gap-2">
               <div className="relative">
@@ -622,6 +913,12 @@ export default function FeedPage() {
                             setOpenDropdown(null);
                           }}
                           className="flex w-full items-center justify-between px-4 py-3 text-sm text-white/80 transition hover:bg-white/[0.06]"
+                          style={{
+                            background:
+                              whenFilter === opt
+                                ? "rgba(168,85,247,0.12)"
+                                : undefined,
+                          }}
                         >
                           <span>{opt}</span>
                           {whenFilter === opt ? (
@@ -685,7 +982,13 @@ export default function FeedPage() {
                           setCategoryFilter(opt);
                           setOpenDropdown(null);
                         }}
-                        className="flex w-full items-center justify-between px-4 py-3 text-sm text-white/80 transition hover:bg-white/[0.06]"
+                          className="flex w-full items-center justify-between px-4 py-3 text-sm text-white/80 transition hover:bg-white/[0.06]"
+                          style={{
+                            background:
+                              categoryFilter === opt
+                                ? "rgba(168,85,247,0.12)"
+                                : undefined,
+                          }}
                       >
                         <span>{opt}</span>
                         {categoryFilter === opt ? (
@@ -738,6 +1041,10 @@ export default function FeedPage() {
                           setOpenDropdown(null);
                         }}
                         className="flex w-full items-center justify-between px-4 py-3 text-sm text-white/80 transition hover:bg-white/[0.06]"
+                        style={{
+                          background:
+                            priceFilter === opt ? "rgba(168,85,247,0.12)" : undefined,
+                        }}
                       >
                         <span>{opt}</span>
                         {priceFilter === opt ? (
@@ -748,6 +1055,17 @@ export default function FeedPage() {
                   </div>
                 ) : null}
               </div>
+
+              {activeFilterCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-sm font-medium text-white/75 transition hover:border-white/20 hover:bg-white/[0.05]"
+                  style={{ marginLeft: "auto" }}
+                >
+                  Clear filters
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -761,9 +1079,10 @@ export default function FeedPage() {
           </div>
           <button
             type="button"
-            className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-medium text-white/75 hover:border-white/20 hover:bg-white/[0.05]"
+            disabled
+            className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-medium text-white/60 transition hover:border-white/20 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Fix my feed
+            Tune my feed (coming soon)
           </button>
         </div>
 
@@ -781,6 +1100,17 @@ export default function FeedPage() {
                   src={featured.image_url}
                   alt={featured.title ?? "Featured event"}
                   className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : null}
+              {!featured.image_url ? (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(168,85,247,0.25) 0%, rgba(244,114,182,0.16) 45%, rgba(20,160,140,0.12) 100%)",
+                  }}
                 />
               ) : null}
 
@@ -788,7 +1118,7 @@ export default function FeedPage() {
                 className="absolute inset-0"
                 style={{
                   background:
-                    "linear-gradient(to top, rgba(10,10,10,0.92), rgba(10,10,10,0.35), rgba(10,10,10,0.15))",
+                    "linear-gradient(to top, rgba(10,10,10,0.78), rgba(10,10,10,0.28), rgba(10,10,10,0.08))",
                 }}
               />
 
@@ -826,9 +1156,9 @@ export default function FeedPage() {
                       .filter(Boolean)
                       .join(" • ") || "—"}
                   </div>
-                  {getAiExplanation(featured) ? (
+                  {safeExplanation(getAiExplanation(featured)) ? (
                     <div className="max-w-3xl text-sm text-white/60 line-clamp-2">
-                      {getAiExplanation(featured)}
+                      {safeExplanation(getAiExplanation(featured))}
                     </div>
                   ) : null}
                 </div>
@@ -838,57 +1168,99 @@ export default function FeedPage() {
         ) : null}
 
         <div className="space-y-10">
-          <Row
-            title="For You"
-            events={forYou}
-            expanded={expandedRow === "For You"}
-            onToggleExpanded={() =>
-              setExpandedRow((r) => (r === "For You" ? null : "For You"))
-            }
-            onOpen={openEvent}
-          />
-          <Row
-            title="Happening This Week"
-            events={happeningThisWeek}
-            expanded={expandedRow === "Happening This Week"}
-            onToggleExpanded={() =>
-              setExpandedRow((r) =>
-                r === "Happening This Week" ? null : "Happening This Week"
-              )
-            }
-            onOpen={openEvent}
-          />
-          <Row
-            title="Electronic and Club"
-            events={electronic}
-            expanded={expandedRow === "Electronic and Club"}
-            onToggleExpanded={() =>
-              setExpandedRow((r) =>
-                r === "Electronic and Club" ? null : "Electronic and Club"
-              )
-            }
-            onOpen={openEvent}
-          />
-          <Row
-            title="Intimate Venues"
-            events={intimate}
-            expanded={expandedRow === "Intimate Venues"}
-            onToggleExpanded={() =>
-              setExpandedRow((r) =>
-                r === "Intimate Venues" ? null : "Intimate Venues"
-              )
-            }
-            onOpen={openEvent}
-          />
-          <Row
-            title="Late Night"
-            events={lateNight}
-            expanded={expandedRow === "Late Night"}
-            onToggleExpanded={() =>
-              setExpandedRow((r) => (r === "Late Night" ? null : "Late Night"))
-            }
-            onOpen={openEvent}
-          />
+          {(() => {
+            const used = new Set<string>();
+
+            const sections = [
+              {
+                title: "For You",
+                subtitle: "Your strongest matches right now.",
+                events: forYou,
+              },
+              {
+                title:
+                  activeMode === "solo"
+                    ? "Best For Solo"
+                    : activeMode === "date"
+                      ? "Best For Date Night"
+                      : "Best For Group Nights",
+                subtitle: "Boosted by your social mode.",
+                events: modeMatched.slice(0, 10),
+              },
+              {
+                title: "Electronic and Club",
+                subtitle: "Bass-forward picks built for momentum.",
+                events: electronic,
+              },
+              {
+                title: "Intimate Venues",
+                subtitle: "Warm, close-up nights with real texture.",
+                events: intimate,
+              },
+              {
+                title: "Social Picks",
+                subtitle: "For sharing energy with friends.",
+                events: socialPicks,
+              },
+              {
+                title: "Outdoor & Active",
+                subtitle: "Open-air energy and movement-friendly plans.",
+                events: outdoorActive,
+              },
+              {
+                title: "Food and Drink",
+                subtitle: "Drink-led evenings and good bites.",
+                events: foodAndDrink,
+              },
+              {
+                title: "Happening This Week",
+                subtitle: "On the calendar, next.",
+                events: happeningThisWeek,
+              },
+              {
+                title: "Late Night",
+                subtitle: "Starts late; ideal for drifting after 21:00.",
+                events: lateNight,
+              },
+              {
+                title: "Under £20",
+                subtitle: "Low cost, high vibe.",
+                events: underTwenty,
+              },
+              {
+                title: "Just Dropped",
+                subtitle: "New arrivals from your recommendations.",
+                events: justDropped,
+              },
+            ].map((s) => ({
+              ...s,
+              events: s.events.filter((e) => {
+                if (used.has(e.id)) return false;
+                used.add(e.id);
+                return true;
+              }),
+            }));
+
+            return sections
+              .filter((s) => s.events.length >= 3)
+              .map((section) => (
+                <Row
+                  key={section.title}
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  events={section.events}
+                  expanded={expandedRow === section.title}
+                  onToggleExpanded={() =>
+                    setExpandedRow((r) =>
+                      r === section.title ? null : section.title
+                    )
+                  }
+                  onOpen={openEvent}
+                  savedIds={savedIds}
+                  onToggleSave={toggleSave}
+                />
+              ));
+          })()}
         </div>
 
         <footer className="mt-14 border-t border-white/10 bg-[rgba(255,255,255,0.02)] px-1 py-10">
@@ -908,9 +1280,9 @@ export default function FeedPage() {
                 <Link href="/passport" className="hover:text-white/85">
                   Taste Passport
                 </Link>
-                <a href="#" onClick={(e) => e.preventDefault()} className="hover:text-white/85">
+                <Link href="/saved" className="hover:text-white/85">
                   Saved
-                </a>
+                </Link>
                 <Link href="/coming-soon" className="hover:text-white/85">
                   For Venues
                 </Link>

@@ -157,7 +157,7 @@ export default function KairosChrome({
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className="kairos-hamburger"
+            className={["kairos-hamburger", drawerOpen ? "open" : ""].join(" ")}
             aria-label="Open menu"
           >
             <span />
@@ -196,15 +196,15 @@ export default function KairosChrome({
             <Link href="/passport" onClick={() => setDrawerOpen(false)}>
               Taste Passport
             </Link>
-            <button type="button" onClick={() => setDrawerOpen(false)}>
+            <Link href="/saved" onClick={() => setDrawerOpen(false)}>
               Saved Events
-            </button>
-            <button type="button" onClick={() => setDrawerOpen(false)}>
+            </Link>
+            <Link href="/settings" onClick={() => setDrawerOpen(false)}>
               Settings
-            </button>
-            <button type="button" onClick={() => setDrawerOpen(false)}>
+            </Link>
+            <Link href="/help" onClick={() => setDrawerOpen(false)}>
               Help
-            </button>
+            </Link>
           </div>
         </aside>
       </div>

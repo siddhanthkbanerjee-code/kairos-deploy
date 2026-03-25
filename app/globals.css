@@ -52,8 +52,10 @@ body {
 .kairos-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  animation: kairos-drift linear infinite;
+  opacity: var(--blobOpacity);
+  filter: blur(58px);
+  animation: kairos-drift ease-in-out infinite;
+  will-change: transform, border-radius, opacity;
 }
 
 .kairos-blob-1 {
@@ -123,23 +125,43 @@ body {
 }
 
 .kairos-hamburger {
-  width: 44px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   background: rgba(255, 255, 255, 0.03);
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
 .kairos-hamburger span {
   display: block;
   width: 16px;
-  height: 1.5px;
+  height: 2px;
   background: var(--navIcon);
   border-radius: 9999px;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.kairos-hamburger:active {
+  transform: scale(0.98);
+}
+
+.kairos-hamburger.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.kairos-hamburger.open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0.6);
+}
+
+.kairos-hamburger.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 .kairos-drawer-overlay {
@@ -217,11 +239,32 @@ body {
 }
 
 @keyframes kairos-drift {
-  0%   { transform: translate(0px, 0px) scale(1); }
-  25%  { transform: translate(80px, -60px) scale(1.08); }
-  50%  { transform: translate(-40px, 100px) scale(0.95); }
-  75%  { transform: translate(-80px, -40px) scale(1.05); }
-  100% { transform: translate(0px, 0px) scale(1); }
+  0% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+    border-radius: 55% 45% 60% 40% / 45% 60% 40% 55%;
+    opacity: calc(var(--blobOpacity) * 0.85);
+  }
+  33% {
+    transform: translate3d(44px, -26px, 0) scale(1.08);
+    border-radius: 45% 55% 40% 60% / 60% 45% 55% 40%;
+    opacity: calc(var(--blobOpacity) * 1.05);
+  }
+  66% {
+    transform: translate3d(-32px, 42px, 0) scale(0.97);
+    border-radius: 62% 38% 52% 48% / 40% 55% 45% 60%;
+    opacity: calc(var(--blobOpacity) * 0.9);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+    border-radius: 55% 45% 60% 40% / 45% 60% 40% 55%;
+    opacity: calc(var(--blobOpacity) * 0.85);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kairos-blob {
+    animation: none;
+  }
 }
 
 .kairos-range {
