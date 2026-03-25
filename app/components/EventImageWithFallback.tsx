@@ -17,6 +17,12 @@ type PlaceholderUi = {
   gradient: string;
 };
 
+function sanitizeSrc(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const s = value.trim();
+  return s.length ? s : null;
+}
+
 function safeTags(tags: EventLike["vibe_tags"]) {
   if (!Array.isArray(tags)) return [];
   return tags.filter((t) => typeof t === "string" && t.trim().length > 0);
@@ -148,7 +154,17 @@ export default function EventImageWithFallback({
   imgClassName?: string;
   size?: "default" | "small";
 }) {
-  const src = event.image_url ?? null;
+  const dna = (event.event_dna ?? {}) as Record<string, unknown>;
+
+  // Traceable + robust src extraction:
+  // Prefer the explicit `image_url` field, then try a few common alternatives.
+  const src =
+    sanitizeSrc(event.image_url) ??
+    sanitizeSrc((event as unknown as { imageUrl?: unknown }).imageUrl) ??
+    sanitizeSrc(dna.image_url) ??
+    sanitizeSrc(dna.imageUrl) ??
+    sanitizeSrc(dna.image);
+
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   const placeholderUi = useMemo(() => getPlaceholderUi(event), [event]);
@@ -160,7 +176,13 @@ export default function EventImageWithFallback({
   const labelClass = isSmall ? "mt-1 text-[10px]" : "mt-2 text-[11px]";
 
   return (
-    <div className={["relative", wrapperClassName].join(" ")}>
+    <div
+      className={["relative", wrapperClassName].join(" ")}
+      data-event-id={event.id ?? ""}
+      data-image-src={src ?? ""}
+      data-image-failed-src={failedSrc ?? ""}
+      data-image-state={showImg ? "image" : "fallback"}
+    >
       {showImg ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

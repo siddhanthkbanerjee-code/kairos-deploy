@@ -25,14 +25,20 @@ export default function Home() {
             </p>
             <h1
               className="editorial text-balance text-4xl font-semibold leading-tight sm:text-6xl"
-              style={{ color: "#1a1a2e" }}
+              style={{
+                color: "rgba(255,255,255,0.96)",
+                textShadow: "0 14px 44px rgba(0,0,0,0.65), 0 2px 10px rgba(0,0,0,0.45)",
+              }}
             >
               Discover the nights that{" "}
               <span style={{ color: ACCENT }}>feel made for you</span>.
             </h1>
             <p
               className="max-w-xl text-base sm:text-lg"
-              style={{ color: "#4a4a6a" }}
+              style={{
+                color: "rgba(255,255,255,0.74)",
+                textShadow: "0 12px 34px rgba(0,0,0,0.55), 0 2px 10px rgba(0,0,0,0.35)",
+              }}
             >
               Kairos learns your vibe in seconds and surfaces the most
               interesting events in London right now—no endless scrolling, just
@@ -51,7 +57,13 @@ export default function Home() {
             >
               Start the taste quiz
             </Link>
-            <div className="text-sm" style={{ color: "#6b6b8a" }}>
+            <div
+              className="text-sm"
+              style={{
+                color: "rgba(255,255,255,0.70)",
+                textShadow: "0 10px 30px rgba(0,0,0,0.45)",
+              }}
+            >
               8 questions, 90 seconds.
             </div>
           </div>
