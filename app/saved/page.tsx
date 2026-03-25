@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import EventImageWithFallback from "../components/EventImageWithFallback";
 
 type RecommendResult = {
   id: string;
@@ -121,6 +122,14 @@ export default function SavedPage() {
                     "0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.07)",
                 }}
               >
+              <div className="relative aspect-[16/9] w-full overflow-hidden bg-white/[0.04]">
+                <EventImageWithFallback
+                  event={ev}
+                  wrapperClassName="absolute inset-0"
+                  imgClassName="absolute inset-0 h-full w-full object-cover"
+                  size="small"
+                />
+              </div>
                 <div className="px-4 py-4">
                   <h2 className="text-lg font-semibold text-white">
                     {ev.title ?? "Untitled event"}
@@ -162,9 +171,17 @@ export default function SavedPage() {
                   key={ev.id}
                   type="button"
                   onClick={() => save(ev.id)}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left hover:bg-white/[0.06]"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left hover:bg-white/[0.06]"
                 >
-                  <div>
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-white/[0.04]">
+                    <EventImageWithFallback
+                      event={ev}
+                      wrapperClassName="absolute inset-0"
+                      imgClassName="absolute inset-0 h-full w-full object-cover"
+                      size="small"
+                    />
+                  </div>
+                  <div className="flex-1">
                     <div className="text-sm font-medium text-white">
                       {ev.title ?? "Untitled event"}
                     </div>

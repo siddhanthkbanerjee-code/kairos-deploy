@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import EventImageWithFallback from "../../components/EventImageWithFallback";
 
 type RecommendResult = {
   id: string;
@@ -303,16 +304,12 @@ export default function EventDetailPage() {
     <main className="min-h-dvh" style={{ color: "#fff" }}>
       <div className="relative">
         <section className="relative h-[50vh] min-h-[360px] w-full overflow-hidden">
-          {ev.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={ev.image_url}
-              alt={ev.title ?? "Event image"}
-              className="absolute inset-0 h-full w-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : null}
+          <EventImageWithFallback
+            event={ev}
+            wrapperClassName="absolute inset-0"
+            imgClassName="absolute inset-0 h-full w-full object-cover"
+            size="default"
+          />
           <div
             className="absolute inset-0"
             style={{
@@ -495,31 +492,12 @@ export default function EventDetailPage() {
                   style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.03)" }}
                 >
                   <div className="relative h-24 w-24 shrink-0 bg-white/[0.04] overflow-hidden">
-                    {s.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={s.image_url}
-                        alt={s.title ?? "Event image"}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <>
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, rgba(168,85,247,0.22) 0%, rgba(244,114,182,0.16) 45%, rgba(20,160,140,0.10) 100%)",
-                          }}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="text-sm font-semibold text-white/85 drop-shadow">
-                            {(s.title ?? "U").slice(0, 1).toUpperCase()}
-                          </div>
-                        </div>
-                      </>
-                    )}
+                    <EventImageWithFallback
+                      event={s}
+                      wrapperClassName="absolute inset-0"
+                      imgClassName="absolute inset-0 h-full w-full object-cover"
+                      size="small"
+                    />
                   </div>
                   <div className="flex-1 py-3 pr-4">
                     <div className="line-clamp-1 text-sm font-semibold text-white">

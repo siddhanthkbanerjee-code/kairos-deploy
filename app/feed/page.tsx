@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import EventImageWithFallback from "../components/EventImageWithFallback";
 
 type RecommendResult = {
   id: string;
@@ -235,42 +236,19 @@ function PremiumEventCard({
       >
         <div className="relative">
           <div className="relative aspect-[9/10] w-full overflow-hidden bg-white/[0.04]">
-            {ev.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={ev.image_url}
-                alt={ev.title ?? "Event image"}
-                className="absolute inset-0 h-full w-full object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : null}
-
-            {!ev.image_url ? (
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(168,85,247,0.28) 0%, rgba(244,114,182,0.18) 45%, rgba(20,160,140,0.12) 100%)",
-                }}
-              />
-            ) : null}
-
+            <EventImageWithFallback
+              event={ev}
+              wrapperClassName="absolute inset-0"
+              imgClassName="absolute inset-0 h-full w-full object-cover"
+              size="default"
+            />
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to top, rgba(10,10,18,0.78), rgba(10,10,18,0.06))",
+                  "linear-gradient(to top, rgba(10,10,18,0.70), rgba(10,10,18,0.04))",
               }}
             />
-
-            {!ev.image_url ? (
-              <div className="absolute bottom-3 left-3 right-3 z-10">
-                <div className="line-clamp-2 text-[11px] font-semibold text-white/90 drop-shadow">
-                  {ev.title ?? "Untitled event"}
-                </div>
-              </div>
-            ) : null}
           </div>
 
           <div
@@ -682,29 +660,45 @@ export default function FeedPage() {
     return filtered[0];
   }, [filtered]);
 
-  const modeNeedle = useMemo(
-    () =>
-      activeMode === "solo" ? "solo" : activeMode === "date" ? "date night" : "group",
-    [activeMode]
-  );
+  const modeNeedles = useMemo(() => {
+    if (activeMode === "solo") return ["solo"];
+    if (activeMode === "date")
+      // Match common social phrasing coming from event metadata.
+      return ["partner", "couple", "date", "date night"];
+    return [
+      "group",
+      "gang",
+      "friends",
+      "social",
+      "crew",
+      "crowd",
+      "merrier",
+    ];
+  }, [activeMode]);
 
   const modeMatched = useMemo(() => {
     if (!filtered) return [];
-    return filtered.filter((ev) => getSocialContext(ev).includes(modeNeedle));
-  }, [filtered, modeNeedle]);
+    return filtered.filter((ev) =>
+      modeNeedles.some((needle) => getSocialContext(ev).includes(needle))
+    );
+  }, [filtered, modeNeedles]);
 
   const forYou = useMemo(() => {
     if (!filtered) return [];
     const base = filtered.slice(0, 28);
 
     const boosted = [...base].sort((a, b) => {
-      const aMatch = getSocialContext(a).includes(modeNeedle);
-      const bMatch = getSocialContext(b).includes(modeNeedle);
+      const aMatch = modeNeedles.some((needle) =>
+        getSocialContext(a).includes(needle)
+      );
+      const bMatch = modeNeedles.some((needle) =>
+        getSocialContext(b).includes(needle)
+      );
       if (aMatch !== bMatch) return aMatch ? -1 : 1;
       return (b.score ?? 0) - (a.score ?? 0);
     });
     return boosted.slice(0, 8);
-  }, [filtered, activeMode]);
+  }, [filtered, modeNeedles]);
 
   const happeningThisWeek = useMemo(() => {
     if (!filtered) return [];
@@ -1094,25 +1088,12 @@ export default function FeedPage() {
             style={{ height: 280, boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}
           >
             <div className="relative h-full w-full">
-              {featured.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={featured.image_url}
-                  alt={featured.title ?? "Featured event"}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ) : null}
-              {!featured.image_url ? (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(168,85,247,0.25) 0%, rgba(244,114,182,0.16) 45%, rgba(20,160,140,0.12) 100%)",
-                  }}
-                />
-              ) : null}
+              <EventImageWithFallback
+                event={featured}
+                wrapperClassName="absolute inset-0"
+                imgClassName="absolute inset-0 h-full w-full object-cover"
+                size="default"
+              />
 
               <div
                 className="absolute inset-0"

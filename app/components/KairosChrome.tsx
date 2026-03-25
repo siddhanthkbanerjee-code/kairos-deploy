@@ -81,8 +81,9 @@ function applyOrbPreset() {
   const root = document.documentElement;
   root.style.background = "rgb(10, 10, 18)"; // #0a0a12
 
-  const purple = "rgba(168, 85, 247, 0.34)"; // #a855f7
-  const rose = "rgba(244, 114, 182, 0.30)"; // #f472b6
+  // Requested orb colours.
+  const purple = "rgba(168, 85, 247, 0.4)"; // #a855f7
+  const rose = "rgba(244, 114, 182, 0.3)"; // #f472b6
 
   const b1 = document.querySelector<HTMLElement>(".kairos-blob-1");
   const b2 = document.querySelector<HTMLElement>(".kairos-blob-2");
@@ -91,8 +92,12 @@ function applyOrbPreset() {
 
   if (b1) b1.style.background = purple;
   if (b2) b2.style.background = rose;
-  if (b3) b3.style.background = "rgba(168, 85, 247, 0.22)";
-  if (b4) b4.style.background = "rgba(244, 114, 182, 0.20)";
+  if (b3) b3.style.background = purple;
+  if (b4) b4.style.background = rose;
+
+  // Ensure nav stays readable on dark orb background.
+  root.style.setProperty("--navText", "rgba(255,255,255,0.88)");
+  root.style.setProperty("--navIcon", "rgba(255,255,255,0.75)");
 }
 
 export function setKairosPalette(name: string) {
@@ -107,7 +112,7 @@ export default function KairosChrome({
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const orbPages = pathname === "/feed" || pathname === "/quiz";
+  const orbPages = pathname === "/" || pathname === "/feed" || pathname === "/quiz";
 
   const initialPalette = useMemo(() => {
     if (pathname === "/") return "light-landing";
