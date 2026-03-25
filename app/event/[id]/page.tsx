@@ -460,15 +460,18 @@ export default function EventDetailPage() {
               {photos.slice(0, 4).map((src, idx) => (
                 <div
                   key={`${src}-${idx}`}
-                  className="h-44 w-72 shrink-0 overflow-hidden rounded-2xl"
+                  className="relative h-44 w-72 shrink-0 overflow-hidden rounded-2xl"
                   style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={src}
-                    alt="Event vibe photo"
-                    className="h-full w-full object-cover"
-                    loading="lazy"
+                  <EventImageWithFallback
+                    event={{
+                      ...ev,
+                      id: `${ev.id}-vibe-${idx}`,
+                      image_url: src,
+                    }}
+                    wrapperClassName="absolute inset-0"
+                    imgClassName="absolute inset-0 h-full w-full object-cover"
+                    size="default"
                   />
                 </div>
               ))}

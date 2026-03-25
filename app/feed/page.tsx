@@ -192,7 +192,27 @@ function getSocialContext(ev: RecommendResult) {
     (dna as any)?.socialContext ??
     (dna as any)?.social ??
     null;
-  return typeof v === "string" ? v.toLowerCase() : "";
+  const fromDna = typeof v === "string" ? v.toLowerCase() : "";
+  if (fromDna) return fromDna;
+
+  // Fallback inference: keeps the mode buttons functional even when
+  // social context metadata is missing.
+  const title = (ev.title ?? "").toLowerCase();
+  const venue = (ev.venue ?? "").toLowerCase();
+  const tags = safeTags(ev.vibe_tags).join(" ").toLowerCase();
+  const hay = `${title} ${venue} ${tags}`;
+
+  if (/(partner|couple|date night|date-night|date|romantic|two|pair)/.test(hay)) {
+    return "date night";
+  }
+  if (/(solo|single|individual|one\b|lone)/.test(hay)) {
+    return "solo";
+  }
+  if (/(group|friends|gang|crew|crowd|party|social|merrier|more the merrier)/.test(hay)) {
+    return "group";
+  }
+
+  return "";
 }
 
 function PremiumEventCard({
@@ -661,10 +681,19 @@ export default function FeedPage() {
   }, [filtered]);
 
   const modeNeedles = useMemo(() => {
-    if (activeMode === "solo") return ["solo"];
+    if (activeMode === "solo")
+      return ["solo", "single", "individual", "one", "solo night", "lone"];
     if (activeMode === "date")
-      // Match common social phrasing coming from event metadata.
-      return ["partner", "couple", "date", "date night"];
+      return [
+        "date night",
+        "date-night",
+        "date",
+        "partner",
+        "couple",
+        "two",
+        "romantic",
+        "pair",
+      ];
     return [
       "group",
       "gang",
@@ -673,6 +702,8 @@ export default function FeedPage() {
       "crew",
       "crowd",
       "merrier",
+      "party",
+      "more the merrier",
     ];
   }, [activeMode]);
 

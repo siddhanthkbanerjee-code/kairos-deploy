@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type EventLike = {
   id?: string;
@@ -13,7 +13,7 @@ type EventLike = {
 
 type PlaceholderUi = {
   emoji: string;
-  label: string;
+  label: string; // category label shown under the emoji
   gradient: string;
 };
 
@@ -23,105 +23,117 @@ function safeTags(tags: EventLike["vibe_tags"]) {
 }
 
 function getSocialContext(ev: EventLike) {
-  const dna = ev.event_dna ?? {};
+  const dna = (ev.event_dna ?? {}) as Record<string, unknown>;
   const v =
-    (dna as any)?.social_context ??
-    (dna as any)?.socialContext ??
-    (dna as any)?.social ??
-    null;
+    dna.social_context ?? dna.socialContext ?? dna.social ?? null;
   return typeof v === "string" ? v.toLowerCase() : "";
 }
 
-function getPrimaryGenre(ev: EventLike) {
-  const dna = ev.event_dna ?? {};
-  const g =
-    (dna as any)?.genre ??
-    (dna as any)?.genres?.[0] ??
-    (dna as any)?.music_genre ??
-    null;
-  return typeof g === "string" ? g.toLowerCase() : "";
-}
-
 function getPlaceholderUi(ev: EventLike): PlaceholderUi {
-  const genre = getPrimaryGenre(ev);
+  const dna = (ev.event_dna ?? {}) as Record<string, unknown>;
+  const genreRaw =
+    (typeof dna.genre === "string" ? dna.genre : null) ??
+    (Array.isArray(dna.genres) && typeof dna.genres[0] === "string"
+      ? dna.genres[0]
+      : null) ??
+    (typeof dna.music_genre === "string" ? dna.music_genre : null) ??
+    "";
+  const genre = typeof genreRaw === "string" ? genreRaw.toLowerCase() : "";
+
   const tags = safeTags(ev.vibe_tags).map((t) => t.toLowerCase());
   const venue = (ev.venue ?? "").toLowerCase();
   const social = getSocialContext(ev);
 
-  const isMusic = ["rock", "pop", "jazz", "electronic", "dance", "r&b", "classical", "latin", "alternative", "club", "house", "techno"].some(
-    (k) => genre.includes(k)
-  );
-  const isArts =
-    genre.includes("other") ||
-    ["intimate", "experimental", "immersive", "atmospheric"].some((k) =>
-      tags.includes(k)
-    );
-  const isOutdoor =
-    tags.includes("outdoor") ||
-    tags.includes("energetic") ||
-    tags.includes("active") ||
-    venue.includes("park") ||
-    venue.includes("outdoor") ||
-    venue.includes("trail");
-  const isFood =
-    ["bar", "cafe", "restaurant", "kitchen", "dining", "bistro"].some((k) =>
-      venue.includes(k)
-    ) || tags.includes("food") || tags.includes("drink") || tags.includes("cocktail");
-  const isSocial =
-    social.includes("group") ||
-    social.includes("solo") ||
-    social.includes("partner") ||
-    social.includes("couple") ||
-    social.includes("friends") ||
-    social.includes("gang") ||
-    social.includes("crew");
+  const hay = `${genre} ${tags.join(" ")} ${venue} ${social}`.toLowerCase();
 
-  if (isMusic) {
+  const matchesAny = (needles: string[]) =>
+    needles.some((n) => hay.includes(n));
+
+  // Order matters: we pick the most specific bucket first.
+  if (matchesAny(["comedy"])) {
     return {
-      emoji: "🎵",
-      label: "Music",
-      gradient:
-        "linear-gradient(135deg, rgba(168, 85, 247, 0.40) 0%, rgba(244, 114, 182, 0.18) 45%, rgba(20, 160, 140, 0.12) 100%)",
+      emoji: "😂",
+      label: "Comedy",
+      gradient: "linear-gradient(135deg, #1e3a5f, #3b82f6)",
     };
   }
-  if (isArts) {
+
+  if (
+    matchesAny([
+      "sports",
+      "fitness",
+      "gym",
+      "workout",
+      "trail",
+      "run",
+      "running",
+      "outdoor",
+      "active",
+      "energetic",
+    ])
+  ) {
     return {
-      emoji: "🎭",
-      label: "Arts & Culture",
-      gradient:
-        "linear-gradient(135deg, rgba(244, 114, 182, 0.30) 0%, rgba(168, 85, 247, 0.16) 55%, rgba(255,255,255,0.04) 100%)",
+      emoji: "⚡",
+      label: "Sports & Fitness",
+      gradient: "linear-gradient(135deg, #064e3b, #10b981)",
     };
   }
-  if (isOutdoor) {
-    return {
-      emoji: "🏃",
-      label: "Outdoor & Active",
-      gradient:
-        "linear-gradient(135deg, rgba(59, 130, 246, 0.28) 0%, rgba(20, 184, 166, 0.18) 45%, rgba(244, 114, 182, 0.10) 100%)",
-    };
-  }
-  if (isFood) {
+
+  if (
+    matchesAny([
+      "food",
+      "drink",
+      "bar",
+      "cafe",
+      "restaurant",
+      "kitchen",
+      "dining",
+      "bistro",
+      "cocktail",
+      "wine",
+      "beer",
+    ])
+  ) {
     return {
       emoji: "🍷",
       label: "Food & Drink",
-      gradient:
-        "linear-gradient(135deg, rgba(244, 114, 182, 0.22) 0%, rgba(168, 85, 247, 0.18) 45%, rgba(255,255,255,0.04) 100%)",
+      gradient: "linear-gradient(135deg, #78350f, #d97706)",
     };
   }
-  if (isSocial) {
+
+  if (
+    matchesAny([
+      "arts",
+      "culture",
+      "theatre",
+      "theater",
+      "museum",
+      "exhibition",
+      "immersive",
+      "experimental",
+      "intimate",
+      "atmospheric",
+    ])
+  ) {
     return {
-      emoji: "🫶",
-      label: "Social",
-      gradient:
-        "linear-gradient(135deg, rgba(20, 160, 140, 0.22) 0%, rgba(168, 85, 247, 0.14) 45%, rgba(244, 114, 182, 0.08) 100%)",
+      emoji: "🎨",
+      label: "Arts & Culture",
+      gradient: "linear-gradient(135deg, #831843, #db2777)",
+    };
+  }
+
+  if (matchesAny(["music", "rave", "club", "electronic", "dance", "dj", "house", "techno", "rock", "pop", "jazz", "latin", "alternative", "r&b"])) {
+    return {
+      emoji: "🎵",
+      label: "Music",
+      gradient: "linear-gradient(135deg, #4c1d95, #7c3aed)",
     };
   }
 
   return {
     emoji: "✨",
     label: "Event",
-    gradient:
-      "linear-gradient(135deg, rgba(168, 85, 247, 0.14) 0%, rgba(244, 114, 182, 0.10) 45%, rgba(20, 160, 140, 0.08) 100%)",
+    gradient: "linear-gradient(135deg, #1e1b4b, #a855f7)",
   };
 }
 
@@ -136,17 +148,12 @@ export default function EventImageWithFallback({
   imgClassName?: string;
   size?: "default" | "small";
 }) {
-  const [imgFailed, setImgFailed] = useState(false);
-
   const src = event.image_url ?? null;
-
-  useEffect(() => {
-    setImgFailed(false);
-  }, [event?.id, event?.image_url]);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   const placeholderUi = useMemo(() => getPlaceholderUi(event), [event]);
 
-  const showImg = !!src && !imgFailed;
+  const showImg = !!src && failedSrc !== src;
   const isSmall = size === "small";
 
   const emojiClass = isSmall ? "text-2xl" : "text-3xl";
@@ -164,28 +171,22 @@ export default function EventImageWithFallback({
           }
           loading="lazy"
           decoding="async"
-          onError={() => setImgFailed(true)}
+          onError={() => setFailedSrc(src)}
         />
       ) : null}
 
       {!showImg ? (
         <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: placeholderUi.gradient,
-            backgroundSize: "cover",
-          }}
+          className="absolute inset-0 z-10"
+          style={{ background: placeholderUi.gradient }}
         >
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(10,10,18,0.86), rgba(10,10,18,0.10))",
-            }}
-          />
-
           <div className="relative h-full w-full flex flex-col items-center justify-center text-center">
-            <div className={emojiClass} style={{ filter: "drop-shadow(0 12px 26px rgba(0,0,0,0.55))" }}>
+            <div
+              className={emojiClass}
+              style={{
+                filter: "drop-shadow(0 12px 26px rgba(0,0,0,0.55))",
+              }}
+            >
               {placeholderUi.emoji}
             </div>
             <div
