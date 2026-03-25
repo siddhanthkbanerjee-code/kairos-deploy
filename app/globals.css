@@ -53,15 +53,15 @@ body {
   position: absolute;
   border-radius: 50%;
   opacity: var(--blobOpacity);
-  filter: blur(58px);
-  animation: kairos-drift ease-in-out infinite;
+  filter: blur(64px);
+  animation: kairos-drift linear infinite;
   will-change: transform, border-radius, opacity;
 }
 
 .kairos-blob-1 {
   width: 700px;
   height: 700px;
-  background: rgba(140, 60, 255, 0.45);
+  background: rgba(168, 85, 247, 0.34);
   top: -200px;
   left: -150px;
   animation-duration: 40s;
@@ -70,7 +70,7 @@ body {
 .kairos-blob-2 {
   width: 600px;
   height: 600px;
-  background: rgba(80, 50, 220, 0.40);
+  background: rgba(244, 114, 182, 0.30);
   top: 30%;
   right: -200px;
   animation-duration: 55s;
@@ -80,7 +80,7 @@ body {
 .kairos-blob-3 {
   width: 500px;
   height: 500px;
-  background: rgba(20, 160, 140, 0.38);
+  background: rgba(168, 85, 247, 0.22);
   bottom: -100px;
   left: 30%;
   animation-duration: 48s;
@@ -90,7 +90,7 @@ body {
 .kairos-blob-4 {
   width: 400px;
   height: 400px;
-  background: rgba(180, 30, 100, 0.35);
+  background: rgba(244, 114, 182, 0.20);
   bottom: 20%;
   left: -100px;
   animation-duration: 62s;
@@ -241,23 +241,23 @@ body {
 @keyframes kairos-drift {
   0% {
     transform: translate3d(0px, 0px, 0) scale(1);
+    border-radius: 50% 50% 50% 50% / 55% 45% 55% 45%;
+  }
+  25% {
+    transform: translate3d(60px, -40px, 0) scale(1.06);
     border-radius: 55% 45% 60% 40% / 45% 60% 40% 55%;
-    opacity: calc(var(--blobOpacity) * 0.85);
   }
-  33% {
-    transform: translate3d(44px, -26px, 0) scale(1.08);
+  50% {
+    transform: translate3d(-45px, 30px, 0) scale(0.98);
     border-radius: 45% 55% 40% 60% / 60% 45% 55% 40%;
-    opacity: calc(var(--blobOpacity) * 1.05);
   }
-  66% {
-    transform: translate3d(-32px, 42px, 0) scale(0.97);
+  75% {
+    transform: translate3d(35px, 55px, 0) scale(1.04);
     border-radius: 62% 38% 52% 48% / 40% 55% 45% 60%;
-    opacity: calc(var(--blobOpacity) * 0.9);
   }
   100% {
     transform: translate3d(0px, 0px, 0) scale(1);
-    border-radius: 55% 45% 60% 40% / 45% 60% 40% 55%;
-    opacity: calc(var(--blobOpacity) * 0.85);
+    border-radius: 50% 50% 50% 50% / 55% 45% 55% 45%;
   }
 }
 
